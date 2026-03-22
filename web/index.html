@@ -303,7 +303,7 @@
     <div class="io-row">
       <div class="io-block">
         <label id="inputLabel">Plain Text</label>
-        <textarea id="inputText" placeholder="Type your message here..." oninput="process()"></textarea>
+        <textarea id="inputText" placeholder="Type your message here..." oninput="clearOutput()" ></textarea>
       </div>
       <div class="io-block">
         <label id="outputLabel">Cipher Text</label>
@@ -323,12 +323,6 @@
   <div class="wheel-wrapper">
     <span class="wheel-label">Live Cipher Wheel</span>
 
-    <!--
-      The wheel is pure SVG.
-      Outer ring (fixed)  → plain letters A–Z at equal angular positions.
-      Inner disk (rotates) → cipher letters, rotated by (shift/26 × 360°).
-      When shift=3: outer A aligns with inner D, B→E, etc.
-    -->
     <svg id="wheelSvg" width="300" height="300" viewBox="0 0 300 300" style="display:block;overflow:visible">
 
       <!-- Outer background -->
@@ -384,7 +378,7 @@
     </div>
   </div>
 
-  <footer>CAESAR CIPHER &mdash; Built with love &amp; Python logic &mdash; Share freely</footer>
+  <footer>CAESAR CIPHER &mdash; Built with love &amp;Ejo Reka Turaswe&amp; Python logic &mdash; Share freely</footer>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -444,6 +438,12 @@
     document.getElementById('inputText').value = document.getElementById('outputText').value;
     setMode(mode === 'encrypt' ? 'decrypt' : 'encrypt');
   }
+  function clearOutput() {
+    document.getElementById('outputText').value = '';
+    const outEl = document.getElementById('outputText');
+    outEl.style.height = '160px';
+  }
+
   function clearAll() {
     document.getElementById('inputText').value = '';
     document.getElementById('outputText').value = '';
@@ -489,6 +489,7 @@
       s.classList.toggle('lit', used.has(s.dataset.letter))
     );
   }
+
 
   const CX = 150, CY = 150;
   const OUTER_R     = 140;
@@ -554,8 +555,7 @@
   }
 
   function updateWheel() {
-    // Rotate inner disk: shift steps × (360/26) degrees
-    // We rotate COUNTER-clockwise so inner A moves to align under outer letter at index=shift
+
     const deg = (shift / 26) * 360;
     const disk = document.getElementById('innerDisk');
     disk.style.transformOrigin = `${CX}px ${CY}px`;

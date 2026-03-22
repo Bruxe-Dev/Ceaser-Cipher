@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -9,16 +9,39 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0d0d0d;
-      --surface: #141414;
-      --border: #2a2a2a;
-      --accent: #e8c84a;
-      --accent-dim: #a88e2e;
-      --text: #e8e4d9;
-      --muted: #666;
-      --red: #e05c4b;
-      --green: #4be05c;
-      --radius: 4px;
+      --accent:      #e8c84a;
+      --accent-dim:  #a88e2e;
+      --accent-glow: rgba(232,200,74,0.12);
+      --green:       #4be05c;
+      --radius:      4px;
+    }
+
+    [data-theme="dark"] {
+      --bg:              #0d0d0d;
+      --surface:         #141414;
+      --border:          #2a2a2a;
+      --text:            #e8e4d9;
+      --muted:           #555;
+      --wheel-bg:        #0d0d0d;
+      --wheel-surface:   #141414;
+      --wheel-ring:      #2a2a2a;
+      --wheel-text-out:  #c8c4b8;
+      --wheel-text-in:   #555;
+      --scanline:        rgba(0,0,0,0.08);
+    }
+
+    [data-theme="light"] {
+      --bg:              #f2ede0;
+      --surface:         #fffef8;
+      --border:          #ccc6b0;
+      --text:            #1a1810;
+      --muted:           #888;
+      --wheel-bg:        #fffef8;
+      --wheel-surface:   #f2ede0;
+      --wheel-ring:      #bbb49a;
+      --wheel-text-out:  #2a2418;
+      --wheel-text-in:   #999;
+      --scanline:        rgba(0,0,0,0.015);
     }
 
     body {
@@ -32,366 +55,218 @@
       padding: 40px 20px 80px;
       position: relative;
       overflow-x: hidden;
+      transition: background 0.3s, color 0.3s;
     }
 
-    /* Scanline overlay */
     body::before {
       content: '';
       pointer-events: none;
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,0,0,0.08) 2px,
-        rgba(0,0,0,0.08) 4px
-      );
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, var(--scanline) 2px, var(--scanline) 4px);
       z-index: 9999;
     }
-
-    /* Glow blob */
     body::after {
       content: '';
       pointer-events: none;
       position: fixed;
-      width: 600px;
-      height: 600px;
+      width: 600px; height: 600px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(232,200,74,0.06) 0%, transparent 70%);
-      top: -100px;
-      left: 50%;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      top: -100px; left: 50%;
       transform: translateX(-50%);
       z-index: 0;
     }
 
-    .container {
-      width: 100%;
-      max-width: 760px;
-      position: relative;
-      z-index: 1;
+    .container { width: 100%; max-width: 760px; position: relative; z-index: 1; }
+
+    /* ── TOPBAR ── */
+    .topbar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+
+    .theme-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 7px 16px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Courier Prime', monospace;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted);
+      transition: all 0.2s;
+      user-select: none;
     }
+    .theme-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+    .toggle-pill {
+      width: 32px; height: 18px;
+      background: var(--border);
+      border-radius: 9px;
+      position: relative;
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .toggle-pill::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      top: 3px; left: 3px;
+      transition: transform 0.3s;
+    }
+    [data-theme="light"] .toggle-pill { background: var(--accent-dim); }
+    [data-theme="light"] .toggle-pill::after { transform: translateX(14px); }
 
     /* ── HEADER ── */
-    header {
-      text-align: center;
-      margin-bottom: 48px;
-      animation: fadeDown 0.6s ease both;
-    }
+    header { text-align: center; margin-bottom: 40px; animation: fadeDown 0.6s ease both; }
 
     .badge {
-      display: inline-block;
-      font-size: 11px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--accent);
-      border: 1px solid var(--accent-dim);
-      padding: 4px 14px;
-      border-radius: 2px;
-      margin-bottom: 16px;
+      display: inline-block; font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+      color: var(--accent); border: 1px solid var(--accent-dim);
+      padding: 4px 14px; border-radius: 2px; margin-bottom: 16px;
     }
 
     h1 {
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(52px, 10vw, 96px);
-      letter-spacing: 6px;
-      line-height: 0.9;
-      color: var(--text);
+      letter-spacing: 6px; line-height: 0.9; color: var(--text);
     }
-
     h1 span { color: var(--accent); }
 
-    .subtitle {
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 13px;
-      letter-spacing: 1px;
-    }
+    .subtitle { margin-top: 14px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
 
     /* ── ALPHABET STRIP ── */
     .alpha-strip {
-      display: flex;
-      justify-content: center;
-      gap: 0;
-      margin-bottom: 40px;
-      animation: fadeUp 0.6s 0.2s ease both;
-      overflow: hidden;
+      display: flex; justify-content: center;
+      margin-bottom: 40px; animation: fadeUp 0.6s 0.2s ease both; overflow: hidden;
     }
-
     .alpha-strip span {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 14px;
-      color: var(--border);
-      width: 28px;
-      text-align: center;
-      transition: color 0.2s, transform 0.2s;
-      cursor: default;
-      user-select: none;
+      font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--border);
+      width: 28px; text-align: center; transition: color 0.2s, transform 0.2s;
+      cursor: default; user-select: none;
     }
-
-    .alpha-strip span.lit {
-      color: var(--accent);
-      transform: scaleY(1.4);
-    }
+    .alpha-strip span.lit { color: var(--accent); transform: scaleY(1.4); }
 
     /* ── CARD ── */
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 36px 36px 32px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 36px 36px 32px;
       animation: fadeUp 0.6s 0.1s ease both;
+      transition: background 0.3s, border-color 0.3s;
     }
 
     /* ── MODE TOGGLE ── */
     .mode-toggle {
-      display: flex;
-      gap: 0;
-      margin-bottom: 32px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
+      display: flex; margin-bottom: 32px;
+      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
     }
-
     .mode-btn {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-family: 'Courier Prime', monospace;
-      font-size: 13px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
+      flex: 1; background: transparent; border: none; color: var(--muted);
+      font-family: 'Courier Prime', monospace; font-size: 13px;
+      letter-spacing: 3px; text-transform: uppercase; padding: 12px;
+      cursor: pointer; transition: all 0.2s;
     }
+    .mode-btn.active { background: var(--accent); color: #0d0d0d; font-weight: 700; }
+    .mode-btn:not(.active):hover { color: var(--text); background: rgba(128,128,128,0.08); }
 
-    .mode-btn.active {
-      background: var(--accent);
-      color: #0d0d0d;
-      font-weight: 700;
-    }
-
-    .mode-btn:not(.active):hover { color: var(--text); background: rgba(255,255,255,0.04); }
-
-    /* ── SHIFT CONTROL ── */
-    .shift-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-
-    .shift-label {
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .shift-track {
-      flex: 1;
-      position: relative;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-    }
-
+    /* ── SHIFT ── */
+    .shift-row { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+    .shift-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+    .shift-track { flex: 1; position: relative; height: 4px; background: var(--border); border-radius: 2px; }
     .shift-track input[type=range] {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      opacity: 0;
-      cursor: pointer;
-      height: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      margin: 0;
+      position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer;
+      height: 20px; top: 50%; transform: translateY(-50%); margin: 0;
     }
-
-    .shift-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-      width: 84.6%; /* default 22/26 */
-      pointer-events: none;
-      transition: width 0.1s;
-    }
-
+    .shift-fill { height: 100%; background: var(--accent); border-radius: 2px; pointer-events: none; transition: width 0.1s; }
     .shift-thumb {
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background: var(--accent);
-      border-radius: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      transition: left 0.1s;
-      left: 84.6%;
-      box-shadow: 0 0 8px rgba(232,200,74,0.6);
+      position: absolute; width: 16px; height: 16px; background: var(--accent); border-radius: 50%;
+      top: 50%; transform: translate(-50%,-50%); pointer-events: none; transition: left 0.1s;
+      box-shadow: 0 0 8px rgba(232,200,74,0.5);
     }
-
-    .shift-value {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 32px;
-      color: var(--accent);
-      min-width: 36px;
-      text-align: center;
-      line-height: 1;
-    }
+    .shift-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--accent); min-width: 36px; text-align: center; line-height: 1; }
 
     /* ── TEXTAREA ── */
-    .io-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    @media (max-width: 540px) {
-      .io-row { grid-template-columns: 1fr; }
-      .card { padding: 24px 20px; }
-    }
+    .io-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 540px) { .io-row { grid-template-columns: 1fr; } .card { padding: 24px 20px; } }
 
     .io-block label {
-      display: block;
-      font-size: 10px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
+      display: block; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
     }
-
     textarea {
-      width: 100%;
-      height: 160px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font-family: 'Courier Prime', monospace;
-      font-size: 15px;
-      line-height: 1.6;
-      padding: 14px;
-      resize: vertical;
-      outline: none;
-      transition: border-color 0.2s;
+      width: 100%; height: 160px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text); font-family: 'Courier Prime', monospace;
+      font-size: 15px; line-height: 1.6; padding: 14px; resize: vertical; outline: none;
+      transition: background 0.3s, color 0.3s, border-color 0.2s;
     }
-
     textarea:focus { border-color: var(--accent-dim); }
-    textarea[readonly] {
-      color: var(--accent);
-      cursor: default;
-    }
+    textarea[readonly] { color: var(--accent); cursor: default; }
 
     /* ── ACTIONS ── */
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
     .btn {
-      font-family: 'Courier Prime', monospace;
-      font-size: 13px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text);
-      padding: 11px 24px;
-      border-radius: var(--radius);
-      cursor: pointer;
-      transition: all 0.15s;
+      font-family: 'Courier Prime', monospace; font-size: 13px; letter-spacing: 2px;
+      text-transform: uppercase; border: 1px solid var(--border); background: transparent;
+      color: var(--text); padding: 11px 24px; border-radius: var(--radius); cursor: pointer; transition: all 0.15s;
     }
-
     .btn:hover { border-color: var(--accent-dim); color: var(--accent); }
-
-    .btn-primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #0d0d0d;
-      font-weight: 700;
-    }
-
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #0d0d0d; font-weight: 700; }
     .btn-primary:hover { background: #f0d45c; border-color: #f0d45c; color: #0d0d0d; }
-
     .btn-copy { margin-left: auto; }
     .btn-copy.copied { border-color: var(--green); color: var(--green); }
 
+    /* ── WHEEL SECTION ── */
+    .wheel-wrapper {
+      margin: 44px auto 0; display: flex; flex-direction: column; align-items: center;
+      gap: 16px; animation: fadeUp 0.6s 0.3s ease both; width: 100%;
+    }
+    .wheel-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+
+    /* ── MAPPING TABLE ── */
+    .map-wrap { width: 100%; overflow-x: auto; }
+    .map-table {
+      border-collapse: collapse; width: 100%;
+      font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1px;
+    }
+    .map-table th, .map-table td {
+      text-align: center; padding: 7px 2px; min-width: 25px;
+      border: 1px solid var(--border); transition: background 0.3s, color 0.3s;
+    }
+    .map-table thead th { background: var(--surface); color: var(--muted); font-size: 10px; letter-spacing: 3px; }
+    .map-table .row-plain td { color: var(--text); background: var(--bg); }
+    .map-table .row-cipher td { color: var(--accent); background: var(--surface); }
+
     /* ── TOAST ── */
     .toast {
-      position: fixed;
-      bottom: 32px;
-      left: 50%;
+      position: fixed; bottom: 32px; left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: var(--surface);
-      border: 1px solid var(--accent-dim);
-      color: var(--accent);
-      font-size: 12px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 10px 24px;
-      border-radius: var(--radius);
-      opacity: 0;
-      transition: all 0.3s;
-      z-index: 1000;
-      pointer-events: none;
+      background: var(--surface); border: 1px solid var(--accent-dim);
+      color: var(--accent); font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+      padding: 10px 24px; border-radius: var(--radius);
+      opacity: 0; transition: all 0.3s; z-index: 10000; pointer-events: none;
     }
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ── CIPHER WHEEL ── */
-    .wheel-wrapper {
-      margin: 40px auto 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      animation: fadeUp 0.6s 0.3s ease both;
-    }
-
-    .wheel-label {
-      font-size: 10px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .wheel-canvas {
-      display: block;
-    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* ── FOOTER ── */
-    footer {
-      text-align: center;
-      margin-top: 48px;
-      font-size: 11px;
-      letter-spacing: 2px;
-      color: var(--muted);
-      animation: fadeUp 0.6s 0.4s ease both;
-    }
+    footer { text-align: center; margin-top: 48px; font-size: 11px; letter-spacing: 2px; color: var(--muted); animation: fadeUp 0.6s 0.4s ease both; }
 
-    /* ── ANIMATIONS ── */
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:translateY(0); } }
+
+    /* Smooth inner disk rotation */
+    #innerDisk { transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); }
   </style>
 </head>
 <body>
-
 <div class="container">
+
+  <!-- Topbar: theme toggle -->
+  <div class="topbar">
+    <button class="theme-btn" onclick="toggleTheme()">
+      <div class="toggle-pill"></div>
+      <span id="themeLbl">Light mode</span>
+    </button>
+  </div>
 
   <header>
     <div class="badge">Classic Cryptography</div>
@@ -399,31 +274,24 @@
     <p class="subtitle">Shift · Encrypt · Decode · Share</p>
   </header>
 
-  <!-- Alphabet strip -->
-  <div class="alpha-strip" id="alphaStrip">
-    <!-- filled by JS -->
-  </div>
+  <div class="alpha-strip" id="alphaStrip"></div>
 
   <div class="card">
-
-    <!-- Mode Toggle -->
     <div class="mode-toggle">
       <button class="mode-btn active" id="encryptBtn" onclick="setMode('encrypt')">⬆ Encrypt</button>
-      <button class="mode-btn" id="decryptBtn" onclick="setMode('decrypt')">⬇ Decrypt</button>
+      <button class="mode-btn"        id="decryptBtn" onclick="setMode('decrypt')">⬇ Decrypt</button>
     </div>
 
-    <!-- Shift -->
     <div class="shift-row">
       <span class="shift-label">Shift</span>
       <div class="shift-track">
-        <div class="shift-fill" id="shiftFill"></div>
+        <div class="shift-fill"  id="shiftFill"></div>
         <div class="shift-thumb" id="shiftThumb"></div>
-        <input type="range" id="shiftSlider" min="1" max="25" value="22" oninput="onShiftChange()"/>
+        <input type="range" id="shiftSlider" min="1" max="25" value="3" oninput="onShiftChange()"/>
       </div>
-      <div class="shift-value" id="shiftDisplay">22</div>
+      <div class="shift-value" id="shiftDisplay">3</div>
     </div>
 
-    <!-- Text I/O -->
     <div class="io-row">
       <div class="io-block">
         <label id="inputLabel">Plain Text</label>
@@ -435,45 +303,100 @@
       </div>
     </div>
 
-    <!-- Actions -->
     <div class="actions">
       <button class="btn btn-primary" onclick="process()">▶ Run</button>
       <button class="btn" onclick="swapTexts()">⇄ Swap</button>
       <button class="btn" onclick="clearAll()">✕ Clear</button>
       <button class="btn btn-copy" id="copyBtn" onclick="copyOutput()">⎘ Copy</button>
     </div>
-
   </div>
 
   <!-- Cipher Wheel -->
   <div class="wheel-wrapper">
     <span class="wheel-label">Live Cipher Wheel</span>
-    <canvas class="wheel-canvas" id="wheelCanvas" width="280" height="280"></canvas>
+
+    <svg id="wheelSvg" width="300" height="300" viewBox="0 0 300 300" style="display:block;overflow:visible">
+
+      <!-- Outer background -->
+      <circle id="wOuterBg" cx="150" cy="150" r="140" fill="var(--wheel-bg)" stroke="var(--wheel-ring)" stroke-width="1.5"/>
+
+      <!-- Mid-ring separator -->
+      <circle id="wMidRing" cx="150" cy="150" r="95" fill="var(--wheel-surface)" stroke="var(--wheel-ring)" stroke-width="1"/>
+
+      <!-- ── INNER DISK (rotates) ── -->
+      <g id="innerDisk">
+        <circle cx="150" cy="150" r="80" fill="var(--wheel-bg)" stroke="var(--accent)" stroke-width="1.5"/>
+        <!-- Inner letters rendered by JS -->
+        <g id="innerLetters"></g>
+      </g>
+
+      <!-- ── OUTER LETTERS (fixed) ── -->
+      <g id="outerLetters"></g>
+
+      <g id="tickMarks"></g>
+
+      <!-- Dashed indicator line from centre to top -->
+      <line id="indicatorLine"
+        x1="150" y1="150" x2="150" y2="10"
+        stroke="var(--accent)" stroke-width="1"
+        stroke-dasharray="4 3" opacity="0.4"/>
+
+      <!-- Triangle notch at top -->
+      <polygon points="150,4 145,14 155,14" fill="var(--accent)"/>
+
+      <!-- Centre hub -->
+      <circle cx="150" cy="150" r="28" fill="var(--wheel-bg)" stroke="var(--accent)" stroke-width="1.5"/>
+      <text id="hubShift"
+        x="150" y="146" text-anchor="middle" dominant-baseline="central"
+        font-family="'Bebas Neue', monospace" font-size="14"
+        fill="var(--accent)">+3</text>
+      <text x="150" y="160" text-anchor="middle" dominant-baseline="central"
+        font-family="'Courier Prime', monospace" font-size="8"
+        fill="var(--accent-dim)" letter-spacing="2">SHIFT</text>
+    </svg>
+
+    <!-- A → B mapping hint -->
+    <div id="mappingHint" style="font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;"></div>
+
+    <!-- Full alphabet mapping table -->
+    <div class="map-wrap">
+      <table class="map-table" id="mapTable">
+        <thead>
+          <tr><th>Plain</th></tr>
+          <tr><th>Cipher</th></tr>
+        </thead>
+      </table>
+    </div>
   </div>
 
-  <footer>CAESAR CIPHER &mdash; Built with love &amp; Python logic &amp;And Exams Pressure(Ark NIYAKIRIYE) &mdash; Share freely</footer>
-
+  <footer>CAESAR CIPHER &mdash; Built with love &amp; Python logic&amp;Pressure Of Exam (But NIYAKIRIYE) &mdash; Share freely</footer>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── Core cipher logic (ported from Python) ──────────────────────────────
-  function encrypt(text, shift) {
-    return text.split('').map(char => {
-      if (/[a-zA-Z]/.test(char)) {
-        const base = char >= 'a' ? 97 : 65;
-        return String.fromCharCode((char.charCodeAt(0) - base + shift + 26) % 26 + base);
+  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let mode  = 'encrypt';
+  let shift = 3;
+
+  // ── Cipher core (Python logic) ────────────────────────────────────────────
+  function encrypt(text, s) {
+    return text.split('').map(ch => {
+      if (/[a-zA-Z]/.test(ch)) {
+        const b = ch >= 'a' ? 97 : 65;
+        return String.fromCharCode((ch.charCodeAt(0) - b + s + 26) % 26 + b);
       }
-      return char;
+      return ch;
     }).join('');
   }
+  function decrypt(text, s) { return encrypt(text, -s); }
 
-  function decrypt(text, shift) { return encrypt(text, -shift); }
-
-  // ── State ─────────────────────────────────────────────────────────────
-  let mode = 'encrypt';
-  let shift = 22;
+  function process() {
+    const inp = document.getElementById('inputText').value;
+    document.getElementById('outputText').value =
+      mode === 'encrypt' ? encrypt(inp, shift) : decrypt(inp, shift);
+    lightAlpha();
+  }
 
   function setMode(m) {
     mode = m;
@@ -491,150 +414,203 @@
     document.getElementById('shiftFill').style.width = pct;
     document.getElementById('shiftThumb').style.left  = pct;
     process();
-    drawWheel();
-    lightAlpha();
-  }
-
-  function process() {
-    const input  = document.getElementById('inputText').value;
-    const output = mode === 'encrypt' ? encrypt(input, shift) : decrypt(input, shift);
-    document.getElementById('outputText').value = output;
-    lightAlpha();
+    updateWheel();
+    buildMapTable();
   }
 
   function swapTexts() {
-    const inp = document.getElementById('inputText');
-    const out = document.getElementById('outputText');
-    inp.value = out.value;
+    document.getElementById('inputText').value = document.getElementById('outputText').value;
     setMode(mode === 'encrypt' ? 'decrypt' : 'encrypt');
   }
-
   function clearAll() {
-    document.getElementById('inputText').value  = '';
+    document.getElementById('inputText').value = '';
     document.getElementById('outputText').value = '';
+    lightAlpha();
   }
-
   function copyOutput() {
     const val = document.getElementById('outputText').value;
     if (!val) return;
     navigator.clipboard.writeText(val).then(() => {
       const btn = document.getElementById('copyBtn');
-      btn.classList.add('copied');
-      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied'); btn.textContent = '✓ Copied!';
       setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '⎘ Copy'; }, 2000);
       showToast('Copied to clipboard!');
     });
   }
-
   function showToast(msg) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
+    t.textContent = msg; t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2200);
   }
 
-  // ── Alphabet strip highlighting ─────────────────────────────────────
-  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  // ── Theme toggle ──────────────────────────────────────────────────────────
+  function toggleTheme() {
+    const html = document.documentElement;
+    const dark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', dark ? 'light' : 'dark');
+    document.getElementById('themeLbl').textContent = dark ? 'Dark mode' : 'Light mode';
+  }
+
+  // ── Alphabet strip ────────────────────────────────────────────────────────
   const strip = document.getElementById('alphaStrip');
   ALPHA.split('').forEach(l => {
     const s = document.createElement('span');
-    s.textContent = l;
-    s.dataset.letter = l;
+    s.textContent = l; s.dataset.letter = l;
     strip.appendChild(s);
   });
-
   function lightAlpha() {
-    const text = (document.getElementById('inputText').value || '').toUpperCase();
-    const used = new Set(text.split('').filter(c => /[A-Z]/.test(c)));
-    strip.querySelectorAll('span').forEach(s => {
-      s.classList.toggle('lit', used.has(s.dataset.letter));
-    });
+    const used = new Set(
+      (document.getElementById('inputText').value || '').toUpperCase()
+        .split('').filter(c => /[A-Z]/.test(c))
+    );
+    strip.querySelectorAll('span').forEach(s =>
+      s.classList.toggle('lit', used.has(s.dataset.letter))
+    );
   }
 
-  // ── Cipher Wheel ─────────────────────────────────────────────────────
-  function drawWheel() {
-    const canvas = document.getElementById('wheelCanvas');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-    const cx = W/2, cy = H/2;
-    const outerR = 120, innerR = 78, labelR = 96, innerLabelR = 60;
+  // ── Cipher Wheel (SVG-based, live rotation) ───────────────────────────────
+  // The wheel is built once; on shift change we just:
+  //   1. Rotate the inner disk group via CSS transform
+  //   2. Update the hub label
+  //   3. Update highlighted outer letter
+  //   4. Update indicator line angle
 
-    ctx.clearRect(0, 0, W, H);
+  const CX = 150, CY = 150;
+  const OUTER_R     = 140;
+  const LABEL_OUT_R = 122;   // outer ring letter radius
+  const LABEL_IN_R  = 65;    // inner disk letter radius
+  const TICK_OUT    = 136;
+  const TICK_IN     = 126;
 
-    const accent = '#e8c84a', muted = '#2a2a2a', mutedText = '#555', textCol = '#e8e4d9';
+  function buildWheelLetters() {
+    const outerG = document.getElementById('outerLetters');
+    const innerG = document.getElementById('innerLetters');
+    const tickG  = document.getElementById('tickMarks');
+    outerG.innerHTML = ''; innerG.innerHTML = ''; tickG.innerHTML = '';
 
-    // Outer ring bg
-    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
-    ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.stroke();
+    const ns = 'http://www.w3.org/2000/svg';
 
-    // Inner ring bg
-    ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI*2);
-    ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.stroke();
-
-    // Draw 26 letters
     for (let i = 0; i < 26; i++) {
-      const angle = (i / 26) * Math.PI * 2 - Math.PI / 2;
-      const shiftedI = (i + shift) % 26;
-      const shiftedAngle = (shiftedI / 26) * Math.PI * 2 - Math.PI / 2;
+      const angle = (i / 26) * 2 * Math.PI - Math.PI / 2;
 
-      // Outer letter (plain)
-      ctx.save();
-      ctx.translate(cx + Math.cos(angle) * labelR, cy + Math.sin(angle) * labelR);
-      ctx.rotate(angle + Math.PI/2);
-      ctx.font = 'bold 11px "Bebas Neue", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = i === 0 ? accent : textCol;
-      ctx.fillText(ALPHA[i], 0, 0);
-      ctx.restore();
+      // Outer letter
+      const lx = CX + Math.cos(angle) * LABEL_OUT_R;
+      const ly = CY + Math.sin(angle) * LABEL_OUT_R;
+      const tOut = document.createElementNS(ns, 'text');
+      tOut.setAttribute('x', lx.toFixed(2));
+      tOut.setAttribute('y', ly.toFixed(2));
+      tOut.setAttribute('text-anchor', 'middle');
+      tOut.setAttribute('dominant-baseline', 'central');
+      tOut.setAttribute('font-family', "'Bebas Neue', monospace");
+      tOut.setAttribute('font-size', '13');
+      tOut.setAttribute('fill', 'var(--wheel-text-out)');
+      tOut.setAttribute('data-idx', i);
+      tOut.textContent = ALPHA[i];
+      outerG.appendChild(tOut);
 
-      // Inner letter (cipher)
-      ctx.save();
-      ctx.translate(cx + Math.cos(angle) * innerLabelR, cy + Math.sin(angle) * innerLabelR);
-      ctx.rotate(angle + Math.PI/2);
-      ctx.font = 'bold 10px "Bebas Neue", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = i === 0 ? accent : mutedText;
-      ctx.fillText(ALPHA[shiftedI], 0, 0);
-      ctx.restore();
+      // Inner letter (same angular positions — the group rotates)
+      const ix = CX + Math.cos(angle) * LABEL_IN_R;
+      const iy = CY + Math.sin(angle) * LABEL_IN_R;
+      const tIn = document.createElementNS(ns, 'text');
+      tIn.setAttribute('x', ix.toFixed(2));
+      tIn.setAttribute('iy', iy.toFixed(2)); // store y separately to handle group rotation
+      tIn.setAttribute('x', ix.toFixed(2));
+      tIn.setAttribute('y', iy.toFixed(2));
+      tIn.setAttribute('text-anchor', 'middle');
+      tIn.setAttribute('dominant-baseline', 'central');
+      tIn.setAttribute('font-family', "'Bebas Neue', monospace");
+      tIn.setAttribute('font-size', '12');
+      tIn.setAttribute('fill', 'var(--wheel-text-in)');
+      tIn.textContent = ALPHA[i];
+      innerG.appendChild(tIn);
 
-      // Tick marks
-      ctx.beginPath();
-      const tx1 = cx + Math.cos(angle) * (outerR - 10);
-      const ty1 = cy + Math.sin(angle) * (outerR - 10);
-      const tx2 = cx + Math.cos(angle) * (outerR - 4);
-      const ty2 = cy + Math.sin(angle) * (outerR - 4);
-      ctx.moveTo(tx1, ty1); ctx.lineTo(tx2, ty2);
-      ctx.strokeStyle = i % 5 === 0 ? '#444' : muted;
-      ctx.lineWidth = i % 5 === 0 ? 1.5 : 0.7;
-      ctx.stroke();
+      // Tick mark on outer ring
+      const t1x = (CX + Math.cos(angle) * TICK_IN).toFixed(2);
+      const t1y = (CY + Math.sin(angle) * TICK_IN).toFixed(2);
+      const t2x = (CX + Math.cos(angle) * TICK_OUT).toFixed(2);
+      const t2y = (CY + Math.sin(angle) * TICK_OUT).toFixed(2);
+      const tick = document.createElementNS(ns, 'line');
+      tick.setAttribute('x1', t1x); tick.setAttribute('y1', t1y);
+      tick.setAttribute('x2', t2x); tick.setAttribute('y2', t2y);
+      tick.setAttribute('stroke', 'var(--wheel-ring)');
+      tick.setAttribute('stroke-width', i % 5 === 0 ? '1.5' : '0.7');
+      tickG.appendChild(tick);
     }
-
-    // Center circle
-    ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI*2);
-    ctx.fillStyle = '#0d0d0d'; ctx.fill();
-    ctx.strokeStyle = accent; ctx.lineWidth = 1; ctx.stroke();
-
-    // Shift indicator arrow
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - 3);
-    ctx.lineTo(cx - 5, cy + 5);
-    ctx.lineTo(cx + 5, cy + 5);
-    ctx.closePath();
-    ctx.fillStyle = accent;
-    ctx.fill();
-
-    // Outer label
-    ctx.font = '8px "Courier Prime", monospace';
-    ctx.fillStyle = mutedText;
-    ctx.textAlign = 'center';
-    ctx.fillText('PLAIN', cx, cy - outerR - 8);
-    ctx.fillText('CIPHER', cx, cy - innerR + 14);
   }
 
-  // ── Init ──────────────────────────────────────────────────────────────
-  onShiftChange(); // sets slider fill + draws wheel
+  function updateWheel() {
+    // Rotate inner disk: shift steps × (360/26) degrees
+    // We rotate COUNTER-clockwise so inner A moves to align under outer letter at index=shift
+    const deg = (shift / 26) * 360;
+    const disk = document.getElementById('innerDisk');
+    disk.style.transformOrigin = `${CX}px ${CY}px`;
+    disk.style.transform = `rotate(${deg}deg)`;
+
+    // Update hub label
+    document.getElementById('hubShift').textContent = `+${shift}`;
+
+    // Highlight outer letter at position `shift` (where inner A aligns)
+    document.querySelectorAll('#outerLetters text').forEach((t, i) => {
+      const isHighlight = i === (shift % 26);
+      t.setAttribute('fill', isHighlight ? 'var(--accent)' : 'var(--wheel-text-out)');
+      t.setAttribute('font-weight', isHighlight ? 'bold' : 'normal');
+      t.setAttribute('font-size',   isHighlight ? '15'   : '13');
+    });
+
+    // Highlight inner A (always at the "natural" top of its disk = position 0)
+    document.querySelectorAll('#innerLetters text').forEach((t, i) => {
+      const isA = i === 0;
+      t.setAttribute('fill', isA ? 'var(--accent)' : 'var(--wheel-text-in)');
+      t.setAttribute('font-weight', isA ? 'bold' : 'normal');
+    });
+
+    // Update mapping hint
+    const cipherA = ALPHA[shift % 26];
+    document.getElementById('mappingHint').textContent = `A → ${cipherA}  ·  Z → ${ALPHA[(25 + shift) % 26]}`;
+
+    // Update indicator line to point at the highlighted outer letter
+    const highlightAngle = ((shift % 26) / 26) * 2 * Math.PI - Math.PI / 2;
+    const lx = (CX + Math.cos(highlightAngle) * 10).toFixed(2);
+    const ly = (CY + Math.sin(highlightAngle) * 10).toFixed(2);
+    const ex = (CX + Math.cos(highlightAngle) * 97).toFixed(2);
+    const ey = (CY + Math.sin(highlightAngle) * 97).toFixed(2);
+    const line = document.getElementById('indicatorLine');
+    line.setAttribute('x1', lx); line.setAttribute('y1', ly);
+    line.setAttribute('x2', ex); line.setAttribute('y2', ey);
+  }
+
+  // ── Mapping table ─────────────────────────────────────────────────────────
+  function buildMapTable() {
+    const table = document.getElementById('mapTable');
+    // Remove old tbody if exists
+    const old = table.querySelector('tbody');
+    if (old) old.remove();
+    // Rebuild thead with data
+    const thead = table.querySelector('thead');
+    thead.innerHTML = '';
+
+    const tr1 = document.createElement('tr');
+    tr1.className = 'row-plain';
+    const tr2 = document.createElement('tr');
+    tr2.className = 'row-cipher';
+
+    const lbl1 = document.createElement('th'); lbl1.textContent = 'Plain';
+    const lbl2 = document.createElement('th'); lbl2.textContent = 'Cipher';
+    tr1.appendChild(lbl1);
+    tr2.appendChild(lbl2);
+
+    ALPHA.split('').forEach((ch, i) => {
+      const td1 = document.createElement('td'); td1.textContent = ch; tr1.appendChild(td1);
+      const td2 = document.createElement('td'); td2.textContent = ALPHA[(i + shift) % 26]; tr2.appendChild(td2);
+    });
+
+    thead.appendChild(tr1);
+    thead.appendChild(tr2);
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  buildWheelLetters();
+  onShiftChange();
 </script>
 </body>
 </html>

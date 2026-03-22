@@ -194,9 +194,17 @@
       color: var(--muted); margin-bottom: 8px;
     }
     textarea {
-      width: 100%; height: 160px; background: var(--bg); border: 1px solid var(--border);
+      width: 100%;
+      min-height: 160px;
+      height: auto;
+      background: var(--bg); border: 1px solid var(--border);
       border-radius: var(--radius); color: var(--text); font-family: 'Courier Prime', monospace;
-      font-size: 15px; line-height: 1.6; padding: 14px; resize: vertical; outline: none;
+      font-size: 15px; line-height: 1.6; padding: 14px;
+      resize: vertical; outline: none;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: break-word;
       transition: background 0.3s, color 0.3s, border-color 0.2s;
     }
     textarea:focus { border-color: var(--accent-dim); }
@@ -315,6 +323,12 @@
   <div class="wheel-wrapper">
     <span class="wheel-label">Live Cipher Wheel</span>
 
+    <!--
+      The wheel is pure SVG.
+      Outer ring (fixed)  → plain letters A–Z at equal angular positions.
+      Inner disk (rotates) → cipher letters, rotated by (shift/26 × 360°).
+      When shift=3: outer A aligns with inner D, B→E, etc.
+    -->
     <svg id="wheelSvg" width="300" height="300" viewBox="0 0 300 300" style="display:block;overflow:visible">
 
       <!-- Outer background -->
@@ -333,6 +347,7 @@
       <!-- ── OUTER LETTERS (fixed) ── -->
       <g id="outerLetters"></g>
 
+      <!-- ── TICK MARKS (fixed, between mid and outer) ── -->
       <g id="tickMarks"></g>
 
       <!-- Dashed indicator line from centre to top -->
@@ -369,7 +384,7 @@
     </div>
   </div>
 
-  <footer>CAESAR CIPHER &mdash; Built with love &amp; Python logic&amp;Pressure Of Exam (But NIYAKIRIYE) &mdash; Share freely</footer>
+  <footer>CAESAR CIPHER &mdash; Built with love &amp; Python logic &mdash; Share freely</footer>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -391,10 +406,17 @@
   }
   function decrypt(text, s) { return encrypt(text, -s); }
 
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.max(160, el.scrollHeight) + 'px';
+  }
+
   function process() {
-    const inp = document.getElementById('inputText').value;
-    document.getElementById('outputText').value =
-      mode === 'encrypt' ? encrypt(inp, shift) : decrypt(inp, shift);
+    const inEl  = document.getElementById('inputText');
+    const outEl = document.getElementById('outputText');
+    outEl.value = mode === 'encrypt' ? encrypt(inEl.value, shift) : decrypt(inEl.value, shift);
+    autoResize(inEl);
+    autoResize(outEl);
     lightAlpha();
   }
 
@@ -467,13 +489,6 @@
       s.classList.toggle('lit', used.has(s.dataset.letter))
     );
   }
-
-  // ── Cipher Wheel (SVG-based, live rotation) ───────────────────────────────
-  // The wheel is built once; on shift change we just:
-  //   1. Rotate the inner disk group via CSS transform
-  //   2. Update the hub label
-  //   3. Update highlighted outer letter
-  //   4. Update indicator line angle
 
   const CX = 150, CY = 150;
   const OUTER_R     = 140;

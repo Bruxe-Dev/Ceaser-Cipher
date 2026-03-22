@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Caesar Cipher — Encode & Decode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #141414;
+      --border: #2a2a2a;
+      --accent: #e8c84a;
+      --accent-dim: #a88e2e;
+      --text: #e8e4d9;
+      --muted: #666;
+      --red: #e05c4b;
+      --green: #4be05c;
+      --radius: 4px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier Prime', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      z-index: 9999;
+    }
+
+    /* Glow blob */
+    body::after {
+      content: '';
+      pointer-events: none;
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,200,74,0.06) 0%, transparent 70%);
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 760px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── HEADER ── */
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent-dim);
+      padding: 4px 14px;
+      border-radius: 2px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(52px, 10vw, 96px);
+      letter-spacing: 6px;
+      line-height: 0.9;
+      color: var(--text);
+    }
+
+    h1 span { color: var(--accent); }
+
+    .subtitle {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    /* ── ALPHABET STRIP ── */
+    .alpha-strip {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 40px;
+      animation: fadeUp 0.6s 0.2s ease both;
+      overflow: hidden;
+    }
+
+    .alpha-strip span {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      color: var(--border);
+      width: 28px;
+      text-align: center;
+      transition: color 0.2s, transform 0.2s;
+      cursor: default;
+      user-select: none;
+    }
+
+    .alpha-strip span.lit {
+      color: var(--accent);
+      transform: scaleY(1.4);
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 36px 32px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    /* ── MODE TOGGLE ── */
+    .mode-toggle {
+      display: flex;
+      gap: 0;
+      margin-bottom: 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .mode-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: 'Courier Prime', monospace;
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: #0d0d0d;
+      font-weight: 700;
+    }
+
+    .mode-btn:not(.active):hover { color: var(--text); background: rgba(255,255,255,0.04); }
+
+    /* ── SHIFT CONTROL ── */
+    .shift-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .shift-label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .shift-track {
+      flex: 1;
+      position: relative;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .shift-track input[type=range] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      opacity: 0;
+      cursor: pointer;
+      height: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      margin: 0;
+    }
+
+    .shift-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 84.6%; /* default 22/26 */
+      pointer-events: none;
+      transition: width 0.1s;
+    }
+
+    .shift-thumb {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      transition: left 0.1s;
+      left: 84.6%;
+      box-shadow: 0 0 8px rgba(232,200,74,0.6);
+    }
+
+    .shift-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      color: var(--accent);
+      min-width: 36px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    /* ── TEXTAREA ── */
+    .io-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 540px) {
+      .io-row { grid-template-columns: 1fr; }
+      .card { padding: 24px 20px; }
+    }
+
+    .io-block label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 160px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Courier Prime', monospace;
+      font-size: 15px;
+      line-height: 1.6;
+      padding: 14px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus { border-color: var(--accent-dim); }
+    textarea[readonly] {
+      color: var(--accent);
+      cursor: default;
+    }
+
+    /* ── ACTIONS ── */
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: 'Courier Prime', monospace;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      padding: 11px 24px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0d0d0d;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover { background: #f0d45c; border-color: #f0d45c; color: #0d0d0d; }
+
+    .btn-copy { margin-left: auto; }
+    .btn-copy.copied { border-color: var(--green); color: var(--green); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface);
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 10px 24px;
+      border-radius: var(--radius);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── CIPHER WHEEL ── */
+    .wheel-wrapper {
+      margin: 40px auto 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .wheel-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .wheel-canvas {
+      display: block;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      animation: fadeUp 0.6s 0.4s ease both;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="badge">Classic Cryptography</div>
+    <h1>CAESAR<br><span>CIPHER</span></h1>
+    <p class="subtitle">Shift · Encrypt · Decode · Share</p>
+  </header>
+
+  <!-- Alphabet strip -->
+  <div class="alpha-strip" id="alphaStrip">
+    <!-- filled by JS -->
+  </div>
+
+  <div class="card">
+
+    <!-- Mode Toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="encryptBtn" onclick="setMode('encrypt')">⬆ Encrypt</button>
+      <button class="mode-btn" id="decryptBtn" onclick="setMode('decrypt')">⬇ Decrypt</button>
+    </div>
+
+    <!-- Shift -->
+    <div class="shift-row">
+      <span class="shift-label">Shift</span>
+      <div class="shift-track">
+        <div class="shift-fill" id="shiftFill"></div>
+        <div class="shift-thumb" id="shiftThumb"></div>
+        <input type="range" id="shiftSlider" min="1" max="25" value="22" oninput="onShiftChange()"/>
+      </div>
+      <div class="shift-value" id="shiftDisplay">22</div>
+    </div>
+
+    <!-- Text I/O -->
+    <div class="io-row">
+      <div class="io-block">
+        <label id="inputLabel">Plain Text</label>
+        <textarea id="inputText" placeholder="Type your message here..." oninput="process()"></textarea>
+      </div>
+      <div class="io-block">
+        <label id="outputLabel">Cipher Text</label>
+        <textarea id="outputText" readonly placeholder="Output appears here..."></textarea>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn btn-primary" onclick="process()">▶ Run</button>
+      <button class="btn" onclick="swapTexts()">⇄ Swap</button>
+      <button class="btn" onclick="clearAll()">✕ Clear</button>
+      <button class="btn btn-copy" id="copyBtn" onclick="copyOutput()">⎘ Copy</button>
+    </div>
+
+  </div>
+
+  <!-- Cipher Wheel -->
+  <div class="wheel-wrapper">
+    <span class="wheel-label">Live Cipher Wheel</span>
+    <canvas class="wheel-canvas" id="wheelCanvas" width="280" height="280"></canvas>
+  </div>
+
+  <footer>CAESAR CIPHER &mdash; Built with love &amp; Python logic &mdash; Share freely</footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Core cipher logic (ported from Python) ──────────────────────────────
+  function encrypt(text, shift) {
+    return text.split('').map(char => {
+      if (/[a-zA-Z]/.test(char)) {
+        const base = char >= 'a' ? 97 : 65;
+        return String.fromCharCode((char.charCodeAt(0) - base + shift + 26) % 26 + base);
+      }
+      return char;
+    }).join('');
+  }
+
+  function decrypt(text, shift) { return encrypt(text, -shift); }
+
+  // ── State ─────────────────────────────────────────────────────────────
+  let mode = 'encrypt';
+  let shift = 22;
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('encryptBtn').classList.toggle('active', m === 'encrypt');
+    document.getElementById('decryptBtn').classList.toggle('active', m === 'decrypt');
+    document.getElementById('inputLabel').textContent  = m === 'encrypt' ? 'Plain Text'  : 'Cipher Text';
+    document.getElementById('outputLabel').textContent = m === 'encrypt' ? 'Cipher Text' : 'Plain Text';
+    process();
+  }
+
+  function onShiftChange() {
+    shift = parseInt(document.getElementById('shiftSlider').value);
+    document.getElementById('shiftDisplay').textContent = shift;
+    const pct = ((shift - 1) / 24 * 100).toFixed(1) + '%';
+    document.getElementById('shiftFill').style.width = pct;
+    document.getElementById('shiftThumb').style.left  = pct;
+    process();
+    drawWheel();
+    lightAlpha();
+  }
+
+  function process() {
+    const input  = document.getElementById('inputText').value;
+    const output = mode === 'encrypt' ? encrypt(input, shift) : decrypt(input, shift);
+    document.getElementById('outputText').value = output;
+    lightAlpha();
+  }
+
+  function swapTexts() {
+    const inp = document.getElementById('inputText');
+    const out = document.getElementById('outputText');
+    inp.value = out.value;
+    setMode(mode === 'encrypt' ? 'decrypt' : 'encrypt');
+  }
+
+  function clearAll() {
+    document.getElementById('inputText').value  = '';
+    document.getElementById('outputText').value = '';
+  }
+
+  function copyOutput() {
+    const val = document.getElementById('outputText').value;
+    if (!val) return;
+    navigator.clipboard.writeText(val).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.classList.add('copied');
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '⎘ Copy'; }, 2000);
+      showToast('Copied to clipboard!');
+    });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ── Alphabet strip highlighting ─────────────────────────────────────
+  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const strip = document.getElementById('alphaStrip');
+  ALPHA.split('').forEach(l => {
+    const s = document.createElement('span');
+    s.textContent = l;
+    s.dataset.letter = l;
+    strip.appendChild(s);
+  });
+
+  function lightAlpha() {
+    const text = (document.getElementById('inputText').value || '').toUpperCase();
+    const used = new Set(text.split('').filter(c => /[A-Z]/.test(c)));
+    strip.querySelectorAll('span').forEach(s => {
+      s.classList.toggle('lit', used.has(s.dataset.letter));
+    });
+  }
+
+  // ── Cipher Wheel ─────────────────────────────────────────────────────
+  function drawWheel() {
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cx = W/2, cy = H/2;
+    const outerR = 120, innerR = 78, labelR = 96, innerLabelR = 60;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const accent = '#e8c84a', muted = '#2a2a2a', mutedText = '#555', textCol = '#e8e4d9';
+
+    // Outer ring bg
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+    ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.stroke();
+
+    // Inner ring bg
+    ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI*2);
+    ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.stroke();
+
+    // Draw 26 letters
+    for (let i = 0; i < 26; i++) {
+      const angle = (i / 26) * Math.PI * 2 - Math.PI / 2;
+      const shiftedI = (i + shift) % 26;
+      const shiftedAngle = (shiftedI / 26) * Math.PI * 2 - Math.PI / 2;
+
+      // Outer letter (plain)
+      ctx.save();
+      ctx.translate(cx + Math.cos(angle) * labelR, cy + Math.sin(angle) * labelR);
+      ctx.rotate(angle + Math.PI/2);
+      ctx.font = 'bold 11px "Bebas Neue", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = i === 0 ? accent : textCol;
+      ctx.fillText(ALPHA[i], 0, 0);
+      ctx.restore();
+
+      // Inner letter (cipher)
+      ctx.save();
+      ctx.translate(cx + Math.cos(angle) * innerLabelR, cy + Math.sin(angle) * innerLabelR);
+      ctx.rotate(angle + Math.PI/2);
+      ctx.font = 'bold 10px "Bebas Neue", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = i === 0 ? accent : mutedText;
+      ctx.fillText(ALPHA[shiftedI], 0, 0);
+      ctx.restore();
+
+      // Tick marks
+      ctx.beginPath();
+      const tx1 = cx + Math.cos(angle) * (outerR - 10);
+      const ty1 = cy + Math.sin(angle) * (outerR - 10);
+      const tx2 = cx + Math.cos(angle) * (outerR - 4);
+      const ty2 = cy + Math.sin(angle) * (outerR - 4);
+      ctx.moveTo(tx1, ty1); ctx.lineTo(tx2, ty2);
+      ctx.strokeStyle = i % 5 === 0 ? '#444' : muted;
+      ctx.lineWidth = i % 5 === 0 ? 1.5 : 0.7;
+      ctx.stroke();
+    }
+
+    // Center circle
+    ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI*2);
+    ctx.fillStyle = '#0d0d0d'; ctx.fill();
+    ctx.strokeStyle = accent; ctx.lineWidth = 1; ctx.stroke();
+
+    // Shift indicator arrow
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 3);
+    ctx.lineTo(cx - 5, cy + 5);
+    ctx.lineTo(cx + 5, cy + 5);
+    ctx.closePath();
+    ctx.fillStyle = accent;
+    ctx.fill();
+
+    // Outer label
+    ctx.font = '8px "Courier Prime", monospace';
+    ctx.fillStyle = mutedText;
+    ctx.textAlign = 'center';
+    ctx.fillText('PLAIN', cx, cy - outerR - 8);
+    ctx.fillText('CIPHER', cx, cy - innerR + 14);
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  onShiftChange(); // sets slider fill + draws wheel
+</script>
+</body>
+</html>
